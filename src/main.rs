@@ -1,4 +1,5 @@
 use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::thread;
 use std::net::TcpListener;
 
 fn main() {
@@ -21,23 +22,22 @@ fn main() {
             Ok(stream) => {
                 println!("Connection received");
 
-                let stream_clone = stream.try_clone().unwrap();
-                let reader = BufReader::new(stream);
-                let mut writer = BufWriter::new(stream_clone);
+                thread::spawn(move || { //new thread created for each new connection
+                    let stream_clone = stream.try_clone().unwrap();
+                    let reader = BufReader::new(stream);
+                    let mut writer = BufWriter::new(stream_clone);
 
-                for i in reader.lines(){
-                    let msg = "Pong";
-                    println!("{:?}", i);
-                    writer.write_all(msg.as_bytes()).err();
-                    writer.flush().unwrap();
-                }
-
+                    for i in reader.lines() {
+                        let msg = "Pong";
+                        println!("{:?}", i);
+                        writer.write_all(msg.as_bytes()).err();
+                        writer.flush().unwrap();
+                    }
+                });
             }
             Err(e) => {
                 println!("Error accepting connection: {}", e);
-
             }
         }
     }
-
 }
